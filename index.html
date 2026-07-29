@@ -20,7 +20,7 @@
             color: white;
         }
 
-        /* === LOGO DI ATAS MENU === */
+        /* === LOGO DI ATAS MENU (DIPERBAIKI AGAR TIDAK HILANG) === */
         .logo-bar {
             display: flex;
             justify-content: center;
@@ -29,6 +29,8 @@
             padding: 15px;
             flex-wrap: wrap;
             background: rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 20;
         }
         .logo-bar img {
             height: 55px;
@@ -143,15 +145,15 @@
         /* === AREA KANVAS & LATAR BELAKANG === */
         canvas {
             display: block;
-            /* Latar belakang kualitas tinggi & memuat cepat */
             background: url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?fit=crop&w=1920&q=85');
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
-            image-rendering: optimizeSpeed; /* Agar lebih lancar */
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
         }
 
-        /* === OVERLAY GELAP AGAR KARAKTER TAMPAK JELAS === */
+        /* === OVERLAY GELAP === */
         .overlay-latar {
             position: fixed;
             top: 0; left: 0;
@@ -193,8 +195,8 @@
 </head>
 <body>
 
-    <!-- Logo Bar -->
-    <div class="logo-bar">
+    <!-- Logo Bar - TETAP ADA & AMAN -->
+    <div class="logo-bar" id="logoTampil">
         <img src="https://raw.githubusercontent.com/gita-ama/Arena-Battle/1fe8704711c5dc039652d7c8f8f9ad7c8b5b0181/logo_ones.jpeg" alt="Logo Ones">
         <img src="https://raw.githubusercontent.com/gita-ama/Arena-Battle/1fe8704711c5dc039652d7c8f8f9ad7c8b5b0181/logo_pakmoko.jpeg" alt="Logo Pakmoko">
         <img src="https://raw.githubusercontent.com/gita-ama/Arena-Battle/1fe8704711c5dc039652d7c8f8f9ad7c8b5b0181/logo_rpl.jpeg" alt="Logo RPL">
@@ -239,12 +241,14 @@
     </div>
 
     <script>
-    // === SETUP KANVAS & OPTIMASI PERFORMA ===
+    // === SETUP KANVAS ===
     const canvas = document.getElementById('areaGame');
-    const ctx = canvas.getContext('2d', { alpha: false }); // Matikan alpha untuk lebih cepat
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+
     function aturUkuran() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        ctx.imageSmoothingEnabled = false;
     }
     aturUkuran();
     window.addEventListener('resize', aturUkuran);
@@ -255,21 +259,21 @@
         skor: new Audio('assets/sounds/score.mp3'),
         selesai: new Audio('assets/sounds/gameover.mp3')
     };
-    // Preload suara
-    Object.values(sfx).forEach(a => a.load());
+    Object.values(sfx).forEach(a => { a.load(); a.volume = 0.8; });
 
     // === VARIABEL UTAMA ===
     let modeMain, levelGame, waktuMain = 60, gameJalan = false;
     const kunci = {};
+    let putaranAnimasi = 0; // Untuk gerakan kaki karakter
 
     // === OBJEK PEMAIN & BOLA ===
     const p1 = {
-        x: 120, y: canvas.height/2 - 80, w: 90, h: 150,
-        skor: 0, kecepatan: 6, warna: '#ff4757', bayang: '#8b0000'
+        x: 120, y: canvas.height/2 - 80, w: 90, h: 140,
+        skor: 0, kecepatan: 6, warna: '#ff4757', warnaBaju: '#d63031', sedangBergerak: false
     };
     const p2 = {
-        x: canvas.width - 210, y: canvas.height/2 - 80, w: 90, h: 150,
-        skor: 0, kecepatan: 6, warna: '#3742fa', bayang: '#00008b'
+        x: canvas.width - 210, y: canvas.height/2 - 80, w: 90, h: 140,
+        skor: 0, kecepatan: 6, warna: '#3742fa', warnaBaju: '#1e3799', sedangBergerak: false
     };
     const bola = {
         x: canvas.width/2, y: canvas.height/2, r: 25,
@@ -280,12 +284,12 @@
     document.addEventListener('keydown', e => kunci[e.key.toLowerCase()] = true);
     document.addEventListener('keyup', e => kunci[e.key.toLowerCase()] = false);
 
-    // === MULAI GAME ===
+    // === MULAI GAME (PERBAIKAN: LOGO TIDAK HILANG TOTAL, HANYA DIATUR VISUALNYA) ===
     function mulaiGame(mode) {
         modeMain = mode;
         levelGame = parseInt(document.getElementById('pilihLevel').value);
         document.getElementById('menu').style.display = 'none';
-        document.querySelector('.logo-bar').style.display = 'none'; // Sembunyikan logo saat main
+        document.getElementById('logoTampil').style.opacity = '0.3'; // Logo tetap ada tapi transparan saat main
         document.getElementById('levelTampil').innerText = levelGame;
         if (mode === 'berdua') document.getElementById('labelMusuh').innerText = 'Pemain 2: ';
         
@@ -307,38 +311,87 @@
         }, 1000);
     }
 
-    // === GAMBAR KARAKTER (HALUS & OPTIMAL) ===
-    function gambarPetarung(p) {
+    // === 🎨 GAMBAR KARAKTER ORANG/GLADIATOR LUCU & DINAMIS 🎨 ===
+    function gambarPetarungAnimasi(p, menghadapKanan) {
         ctx.save();
-        // Bayangan kaki
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        
+        // Efek ayunan kaki berbasis waktu gerakan
+        let ayunanKaki = p.sedangBergerak ? Math.sin(putaranAnimasi * 0.15) * 15 : 0;
+        let ayunanNafas = Math.sin(putaranAnimasi * 0.05) * 3; // Efek naik-turun nafas saat diam
+
+        // 1. Bayangan di Bawah Karakter
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
         ctx.beginPath();
-        ctx.ellipse(p.x + p.w/2, p.y + p.h + 10, p.w/2, 18, 0, 0, Math.PI*2);
+        ctx.ellipse(p.x + p.w/2, p.y + p.h + 10, p.w/2 - 5, 12, 0, 0, Math.PI*2);
         ctx.fill();
 
-        // Tubuh (Efek gradasi 3D)
+        // 2. Kaki Kiri dan Kanan (Berayun bergantian saat berjalan)
+        ctx.fillStyle = '#2d3436';
+        ctx.fillRect(p.x + p.w/3 - 8, p.y + p.h - 5 + (ayunanKaki > 0 ? ayunanKaki : 0), 16, 20);
+        ctx.fillRect(p.x + (p.w/3)*2 - 8, p.y + p.h - 5 + (ayunanKaki < 0 ? -ayunanKaki : 0), 16, 20);
+
+        // 3. Tubuh/Baju Zirah Petarung (Bulat & Lucu)
         let grad = ctx.createLinearGradient(p.x, p.y, p.x + p.w, p.y);
         grad.addColorStop(0, p.warna);
-        grad.addColorStop(1, p.bayang);
+        grad.addColorStop(1, p.warnaBaju);
         ctx.fillStyle = grad;
-        ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.beginPath();
+        ctx.roundRect(p.x, p.y + ayunanNafas, p.w, p.h - 10, 25);
+        ctx.fill();
 
-        // Kepala
+        // 4. Kepala Bulat Kulit
         ctx.fillStyle = '#ffeaa7';
         ctx.beginPath();
-        ctx.arc(p.x + p.w/2, p.y - 25, 30, 0, Math.PI*2);
+        ctx.arc(p.x + p.w/2, p.y - 20 + ayunanNafas, 35, 0, Math.PI*2);
         ctx.fill();
-        
-        // Efek kilauan
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.fillRect(p.x + 10, p.y + 15, 25, 60);
+
+        // 5. Helm Emas Gladiator
+        ctx.fillStyle = '#fdcb6e';
+        ctx.beginPath();
+        ctx.arc(p.x + p.w/2, p.y - 28 + ayunanNafas, 37, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#d63031'; // Jambul Merah
+        ctx.beginPath();
+        ctx.arc(p.x + p.w/2, p.y - 65 + ayunanNafas, 12, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillRect(p.x + p.w/2 - 4, p.y - 60 + ayunanNafas, 8, 25);
+
+        // 6. Mata Berkedip
+        ctx.fillStyle = '#2d3436';
+        let mataTinggi = Math.sin(putaranAnimasi * 0.02) > 0.95 ? 1 : 10;
+        if (menghadapKanan) {
+            ctx.beginPath();
+            ctx.ellipse(p.x + p.w/2 + 10, p.y - 20 + ayunanNafas, 4, mataTinggi/2, 0, 0, Math.PI*2);
+            ctx.ellipse(p.x + p.w/2 + 25, p.y - 20 + ayunanNafas, 4, mataTinggi/2, 0, 0, Math.PI*2);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.ellipse(p.x + p.w/2 - 10, p.y - 20 + ayunanNafas, 4, mataTinggi/2, 0, 0, Math.PI*2);
+            ctx.ellipse(p.x + p.w/2 - 25, p.y - 20 + ayunanNafas, 4, mataTinggi/2, 0, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // 7. Pipi Merona
+        ctx.fillStyle = 'rgba(255, 118, 117, 0.6)';
+        if (menghadapKanan) {
+            ctx.beginPath();
+            ctx.arc(p.x + p.w/2 + 8, p.y - 10 + ayunanNafas, 6, 0, Math.PI*2);
+            ctx.arc(p.x + p.w/2 + 27, p.y - 10 + ayunanNafas, 6, 0, Math.PI*2);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.arc(p.x + p.w/2 - 8, p.y - 10 + ayunanNafas, 6, 0, Math.PI*2);
+            ctx.arc(p.x + p.w/2 - 27, p.y - 10 + ayunanNafas, 6, 0, Math.PI*2);
+            ctx.fill();
+        }
+
         ctx.restore();
     }
 
-    // === GAMBAR BOLA BERPUTAR LANCAR ===
+    // === GAMBAR BOLA (ANTI GETAR) ===
     function gambarBolaUtama() {
         ctx.save();
-        ctx.translate(bola.x, bola.y);
+        ctx.translate(Math.round(bola.x), Math.round(bola.y));
         bola.rotasi += bola.vx * 0.05;
         ctx.rotate(bola.rotasi);
 
@@ -363,49 +416,56 @@
         return (jarakX*jarakX + jarakY*jarakY) < (lingkaran.r*lingkaran.r);
     }
 
-    // === KOMPUTER AI PINTAR & LANCAR ===
+    // === KOMPUTER AI ===
     function gerakKomputerPintar() {
         let reaksi = 2 + levelGame;
-        if (bola.x > p2.x + p2.w/2) p2.x += reaksi;
-        else if (bola.x < p2.x + p2.w/2) p2.x -= reaksi;
+        let bergerak = false;
+        if (bola.x > p2.x + p2.w/2) { p2.x += reaksi; bergerak = true; }
+        else if (bola.x < p2.x + p2.w/2) { p2.x -= reaksi; bergerak = true; }
 
-        if (bola.y > p2.y + p2.h/2) p2.y += reaksi * 0.8;
-        else if (bola.y < p2.y + p2.h/2) p2.y -= reaksi * 0.8;
+        if (bola.y > p2.y + p2.h/2) { p2.y += reaksi * 0.8; bergerak = true; }
+        else if (bola.y < p2.y + p2.h/2) { p2.y -= reaksi * 0.8; bergerak = true; }
+        p2.sedangBergerak = bergerak;
     }
 
     // === KONTROL PEMAIN ===
     function gerakanPemain() {
-        // P1: W A S D
-        if (kunci['w'] && p1.y > 80) p1.y -= p1.kecepatan;
-        if (kunci['s'] && p1.y < canvas.height - p1.h - 20) p1.y += p1.kecepatan;
-        if (kunci['a'] && p1.x > 10) p1.x -= p1.kecepatan;
-        if (kunci['d'] && p1.x < canvas.width/2 - p1.w - 50) p1.x += p1.kecepatan;
+        let p1Gerak = false;
+        if (kunci['w'] && p1.y > 80) { p1.y -= p1.kecepatan; p1Gerak = true; }
+        if (kunci['s'] && p1.y < canvas.height - p1.h - 20) { p1.y += p1.kecepatan; p1Gerak = true; }
+        if (kunci['a'] && p1.x > 10) { p1.x -= p1.kecepatan; p1Gerak = true; }
+        if (kunci['d'] && p1.x < canvas.width/2 - p1.w - 50) { p1.x += p1.kecepatan; p1Gerak = true; }
 
-        // P2: Panah
         if (modeMain === 'berdua') {
-            if (kunci['arrowup'] && p2.y > 80) p2.y -= p2.kecepatan;
-            if (kunci['arrowdown'] && p2.y < canvas.height - p2.h - 20) p2.y += p2.kecepatan;
-            if (kunci['arrowleft'] && p2.x > canvas.width/2 + 50) p2.x -= p2.kecepatan;
-            if (kunci['arrowright'] && p2.x < canvas.width - p2.w - 10) p2.x += p2.kecepatan;
+            let p2Gerak = false;
+            if (kunci['arrowup'] && p2.y > 80) { p2.y -= p2.kecepatan; p2Gerak = true; }
+            if (kunci['arrowdown'] && p2.y < canvas.height - p2.h - 20) { p2.y += p2.kecepatan; p2Gerak = true; }
+            if (kunci['arrowleft'] && p2.x > canvas.width/2 + 50) { p2.x -= p2.kecepatan; p2Gerak = true; }
+            if (kunci['arrowright'] && p2.x < canvas.width - p2.w - 10) { p2.x += p2.kecepatan; p2Gerak = true; }
+            p2.sedangBergerak = p2Gerak;
         }
+        p1.sedangBergerak = p1Gerak;
     }
 
     // === UPDATE POSISI ===
     function perbaruiSemua() {
+        putaranAnimasi++; // Tambah waktu untuk animasi halus
         bola.x += bola.vx;
         bola.y += bola.vy;
 
-        // Pantulan dinding atas bawah
-        if (bola.y < bola.r || bola.y > canvas.height - bola.r) bola.vy *= -1;
+        // Pantulan dinding dikunci
+        if (bola.y - bola.r < 0) { bola.y = bola.r; bola.vy *= -1; }
+        if (bola.y + bola.r > canvas.height) { bola.y = canvas.height - bola.r; bola.vy *= -1; }
 
         // Gol
         if (bola.x < -10) { p2.skor++; resetBola(); }
         if (bola.x > canvas.width + 10) { p1.skor++; resetBola(); }
 
-        // Tabrakan
+        // Tabrakan & Cegah Bola Menempel
         if (cekTabrak(p1, bola) || cekTabrak(p2, bola)) {
             bola.vx *= -1.08;
-            sfx.hit.play().catch(()=>{}); // Abaikan error jika suara belum dimuat
+            bola.x += bola.vx * 2; // Dorong keluar
+            sfx.hit.play().catch(()=>{});
         }
 
         if (modeMain === 'komputer') gerakKomputerPintar();
@@ -443,12 +503,11 @@
         if (gameJalan) requestAnimationFrame(lingkaranGame);
     }
 
-    // === LOOP UTAMA (60 FPS OPTIMAL) ===
+    // === LOOP UTAMA ===
     function lingkaranGame() {
         if (!gameJalan) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Garis tengah arena
         ctx.strokeStyle = 'rgba(255,255,255,0.2)';
         ctx.setLineDash([20, 20]);
         ctx.lineWidth = 3;
@@ -458,8 +517,8 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        gambarPetarung(p1);
-        gambarPetarung(p2);
+        gambarPetarungAnimasi(p1, true);  // P1 menghadap kanan
+        gambarPetarungAnimasi(p2, false); // P2 menghadap kiri
         gambarBolaUtama();
         perbaruiSemua();
 
