@@ -3,31 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Battle 2.5D</title>
+    <title>GLADIATOR ARENA: ULTIMATE BATTLE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Layar Menu Utama -->
     <div id="menu">
-        <h1>⚔️ ARENA BATTLE 2.5D ⚔️</h1>
-        <button onclick="startGame('computer')">🎮 1 Pemain vs Komputer</button>
-        <button onclick="startGame('dua')">👥 2 Pemain</button>
-        <select id="level">
-            <option value="1">Level 1 - Mudah</option>
-            <option value="2">Level 2 - Sedang</option>
-            <option value="3">Level 3 - Sulit</option>
-        </select>
+        <h1>⚔️ GLADIATOR ARENA ⚔️</h1>
+        <p class="sub">PERTARUNGAN TAK TERBATAS</p>
+        
+        <button onclick="mulaiGame('komputer')">🎮 LAWAN KOMPUTER</button>
+        <button onclick="mulaiGame('berdua')">👥 MAIN BERDUA</button>
+
+        <div class="pilih">
+            <label>Pilih Level Kesulitan:</label>
+            <select id="pilihLevel">
+                <option value="1">🟢 Pemula</option>
+                <option value="2" selected>🟡 Petarung</option>
+                <option value="3">🔴 Legenda</option>
+            </select>
+        </div>
     </div>
 
-    <div id="info">
-        <div>⏱️ Waktu: <span id="timer">60</span>s</div>
-        <div>⭐ Level: <span id="levelInfo">1</span></div>
-        <div>🔴 Pemain 1: <span id="skor1">0</span></div>
-        <div>🔵 <span id="labelP2">Musuh: <span id="skor2">0</span></span></div>
-        <button onclick="pauseGame()">⏸️</button>
+    <!-- Panel Info Atas -->
+    <div id="panelInfo">
+        <div class="info-box">⏱️ Waktu: <span id="waktu">60</span>s</div>
+        <div class="info-box">⭐ Level: <span id="levelTampil">2</span></div>
+        <div class="info-box merah">🔴 Pemain 1: <span id="skorP1">0</span></div>
+        <div class="info-box biru">🔵 <span id="labelMusuh">Musuh: <span id="skorP2">0</span></span></div>
+        <button id="tombolJeda" onclick="jedaGame()">⏸️</button>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
-    <div id="pesan"></div>
+    <!-- Area Permainan -->
+    <canvas id="areaGame"></canvas>
+
+    <!-- Pesan Akhir -->
+    <div id="kotakPesan">
+        <h2 id="teksPesan"></h2>
+        <button onclick="location.reload()">🔄 Main Lagi</button>
+    </div>
 
     <script src="script.js"></script>
 </body>
