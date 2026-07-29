@@ -20,7 +20,7 @@
             color: white;
         }
 
-        /* === LOGO DI ATAS MENU (DIPERBAIKI AGAR TIDAK HILANG) === */
+        /* === LOGO DI ATAS MENU - TETAP JELAS 100% === */
         .logo-bar {
             display: flex;
             justify-content: center;
@@ -31,6 +31,8 @@
             background: rgba(0,0,0,0.4);
             position: relative;
             z-index: 20;
+            opacity: 1 !important; /* Paksa selalu terlihat jelas */
+            visibility: visible !important;
         }
         .logo-bar img {
             height: 55px;
@@ -82,7 +84,7 @@
             border-radius: 12px;
             font-size: 19px;
             font-weight: bold;
-            cursor: pointer;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
@@ -195,7 +197,7 @@
 </head>
 <body>
 
-    <!-- Logo Bar - TETAP ADA & AMAN -->
+    <!-- Logo Bar - SELALU TERJELAS 100% -->
     <div class="logo-bar" id="logoTampil">
         <img src="https://raw.githubusercontent.com/gita-ama/Arena-Battle/1fe8704711c5dc039652d7c8f8f9ad7c8b5b0181/logo_ones.jpeg" alt="Logo Ones">
         <img src="https://raw.githubusercontent.com/gita-ama/Arena-Battle/1fe8704711c5dc039652d7c8f8f9ad7c8b5b0181/logo_pakmoko.jpeg" alt="Logo Pakmoko">
@@ -264,7 +266,7 @@
     // === VARIABEL UTAMA ===
     let modeMain, levelGame, waktuMain = 60, gameJalan = false;
     const kunci = {};
-    let putaranAnimasi = 0; // Untuk gerakan kaki karakter
+    let putaranAnimasi = 0;
 
     // === OBJEK PEMAIN & BOLA ===
     const p1 = {
@@ -284,12 +286,12 @@
     document.addEventListener('keydown', e => kunci[e.key.toLowerCase()] = true);
     document.addEventListener('keyup', e => kunci[e.key.toLowerCase()] = false);
 
-    // === MULAI GAME (PERBAIKAN: LOGO TIDAK HILANG TOTAL, HANYA DIATUR VISUALNYA) ===
+    // === MULAI GAME (LOGO TETAP JELAS, TIDAK DIUBAH OPACITY) ===
     function mulaiGame(mode) {
         modeMain = mode;
         levelGame = parseInt(document.getElementById('pilihLevel').value);
         document.getElementById('menu').style.display = 'none';
-        document.getElementById('logoTampil').style.opacity = '0.3'; // Logo tetap ada tapi transparan saat main
+        // LOGO TETAP ADA & JELAS, TIDAK DISEMBUNYIKAN/DIKURANGI TERANGNYA
         document.getElementById('levelTampil').innerText = levelGame;
         if (mode === 'berdua') document.getElementById('labelMusuh').innerText = 'Pemain 2: ';
         
@@ -315,22 +317,21 @@
     function gambarPetarungAnimasi(p, menghadapKanan) {
         ctx.save();
         
-        // Efek ayunan kaki berbasis waktu gerakan
         let ayunanKaki = p.sedangBergerak ? Math.sin(putaranAnimasi * 0.15) * 15 : 0;
-        let ayunanNafas = Math.sin(putaranAnimasi * 0.05) * 3; // Efek naik-turun nafas saat diam
+        let ayunanNafas = Math.sin(putaranAnimasi * 0.05) * 3;
 
-        // 1. Bayangan di Bawah Karakter
+        // Bayangan
         ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
         ctx.beginPath();
         ctx.ellipse(p.x + p.w/2, p.y + p.h + 10, p.w/2 - 5, 12, 0, 0, Math.PI*2);
         ctx.fill();
 
-        // 2. Kaki Kiri dan Kanan (Berayun bergantian saat berjalan)
+        // Kaki
         ctx.fillStyle = '#2d3436';
         ctx.fillRect(p.x + p.w/3 - 8, p.y + p.h - 5 + (ayunanKaki > 0 ? ayunanKaki : 0), 16, 20);
         ctx.fillRect(p.x + (p.w/3)*2 - 8, p.y + p.h - 5 + (ayunanKaki < 0 ? -ayunanKaki : 0), 16, 20);
 
-        // 3. Tubuh/Baju Zirah Petarung (Bulat & Lucu)
+        // Tubuh
         let grad = ctx.createLinearGradient(p.x, p.y, p.x + p.w, p.y);
         grad.addColorStop(0, p.warna);
         grad.addColorStop(1, p.warnaBaju);
@@ -339,24 +340,24 @@
         ctx.roundRect(p.x, p.y + ayunanNafas, p.w, p.h - 10, 25);
         ctx.fill();
 
-        // 4. Kepala Bulat Kulit
+        // Kepala
         ctx.fillStyle = '#ffeaa7';
         ctx.beginPath();
         ctx.arc(p.x + p.w/2, p.y - 20 + ayunanNafas, 35, 0, Math.PI*2);
         ctx.fill();
 
-        // 5. Helm Emas Gladiator
+        // Helm
         ctx.fillStyle = '#fdcb6e';
         ctx.beginPath();
         ctx.arc(p.x + p.w/2, p.y - 28 + ayunanNafas, 37, Math.PI, 0);
         ctx.fill();
-        ctx.fillStyle = '#d63031'; // Jambul Merah
+        ctx.fillStyle = '#d63031';
         ctx.beginPath();
         ctx.arc(p.x + p.w/2, p.y - 65 + ayunanNafas, 12, 0, Math.PI*2);
         ctx.fill();
         ctx.fillRect(p.x + p.w/2 - 4, p.y - 60 + ayunanNafas, 8, 25);
 
-        // 6. Mata Berkedip
+        // Mata
         ctx.fillStyle = '#2d3436';
         let mataTinggi = Math.sin(putaranAnimasi * 0.02) > 0.95 ? 1 : 10;
         if (menghadapKanan) {
@@ -371,7 +372,7 @@
             ctx.fill();
         }
 
-        // 7. Pipi Merona
+        // Pipi
         ctx.fillStyle = 'rgba(255, 118, 117, 0.6)';
         if (menghadapKanan) {
             ctx.beginPath();
@@ -449,11 +450,11 @@
 
     // === UPDATE POSISI ===
     function perbaruiSemua() {
-        putaranAnimasi++; // Tambah waktu untuk animasi halus
+        putaranAnimasi++;
         bola.x += bola.vx;
         bola.y += bola.vy;
 
-        // Pantulan dinding dikunci
+        // Pantulan dinding
         if (bola.y - bola.r < 0) { bola.y = bola.r; bola.vy *= -1; }
         if (bola.y + bola.r > canvas.height) { bola.y = canvas.height - bola.r; bola.vy *= -1; }
 
@@ -464,7 +465,7 @@
         // Tabrakan & Cegah Bola Menempel
         if (cekTabrak(p1, bola) || cekTabrak(p2, bola)) {
             bola.vx *= -1.08;
-            bola.x += bola.vx * 2; // Dorong keluar
+            bola.x += bola.vx * 2;
             sfx.hit.play().catch(()=>{});
         }
 
@@ -517,8 +518,8 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        gambarPetarungAnimasi(p1, true);  // P1 menghadap kanan
-        gambarPetarungAnimasi(p2, false); // P2 menghadap kiri
+        gambarPetarungAnimasi(p1, true);
+        gambarPetarungAnimasi(p2, false);
         gambarBolaUtama();
         perbaruiSemua();
 
